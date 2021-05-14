@@ -1,0 +1,29 @@
+#***********************
+# Nombre del Script:            ejercicio4.sh
+# Trabajo Practico Nro:         1
+# Ejercicio Nro:                4
+# Entrega Nro:                  1
+# Integrantes
+#
+#       Apellidos               Nombre                  Dni
+#-------------------------------------------------------------------
+#
+#       Della Maddalena         Tomas                   39322141
+#       Hidalgo                 Nahuel Christian        41427455
+#       Feito                   Gustavo                 27027190
+#       Pfeiffer                Martin                  39166668
+#       Zarzycki                Hernan Alejandro        39244031
+#
+#***********************
+
+Responda:
+1. ¿Cuál es el objetivo de este script?, ¿Qué parámetros recibe?
+2. Comentar el código según la funcionalidad (no describa los comandos, indique la lógica)
+3. Completar los “echo” con el mensaje correspondiente.
+4. ¿Qué nombre debería tener las funciones funcA, funcB, funcC?
+5. ¿Agregaría alguna otra validación a los parámetros?, ¿existe algún error en el script?
+6. ¿Qué información brinda la variable $#? ¿Qué otras variables similares conocen?
+Explíquelas.
+7. Explique las diferencias entre los distintos tipos de comillas que se pueden utilizar en Shell
+scripts.
+8. ¿Qué sucede si se ejecuta el script sin ningún parámetro?
