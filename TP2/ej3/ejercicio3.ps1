@@ -43,11 +43,13 @@ Param(
 )
 $logFileName#TODO
 $LIST = Get-ChildItem -Path $pathEntrada -File -Recurse | Where-Object {$_.Length -gt $umbral*1024}
+$usedHash = New-Object System.Collections.ArrayList
 foreach($file in $LIST){
-    if((file -i $file).Contains("text")){
-        $hash = (Get-FileHash $file -Algorithm MD5).Hash
-        $LISTA = Get-ChildItem $pathEntrada -File -Recurse | Get-FileHash -Algorithm MD5 | Where-Object {$_.Hash -match $hash}
-        $FILES = $LISTA.Path.Split("/")
-        Write-Host ($FILES[$FILES.Length-1]+"`t`t"+$LISTA.Path)
-    }
+    
+    $hash = (Get-FileHash $file -Algorithm MD5).Hash
+     
+    if( !$usedHash.Contains($hash) -and !((Get-Content $file) -match '[^\x20-\x7F]')){
+    Get-ChildItem $pathEntrada -File -Recurse | Get-FileHash -Algorithm MD5 | Where-Object {$_.Hash -match $hash} | ForEach-Object {$FILE = $_.Path.Split("\"); $PATH = $_.Path; Write-Host ($FILE[$FILE.Length-1]) ("`t`t") ($PATH)};
+    $usedHash.add($hash)
+}
 }
