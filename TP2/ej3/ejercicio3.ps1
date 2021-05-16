@@ -41,10 +41,13 @@ Param(
     [ValidateRange("Positive")]
     [Int64] $umbral
 )
+$logFileName#TODO
 $LIST = Get-ChildItem -Path $pathEntrada -File -Recurse | Where-Object {$_.Length -gt $umbral*1024}
 foreach($file in $LIST){
-    $file.Attributes
-    #(Get-FileHash -Algorithm MD5 $file).Hash
-
-
+    if((file -i $file).Contains("text")){
+        $hash = (Get-FileHash $file -Algorithm MD5).Hash
+        $LISTA = Get-ChildItem $pathEntrada -File -Recurse | Get-FileHash -Algorithm MD5 | Where-Object {$_.Hash -match $hash}
+        $FILES = $LISTA.Path.Split("/")
+        Write-Host ($FILES[$FILES.Length-1]+"`t`t"+$LISTA.Path)
+    }
 }
