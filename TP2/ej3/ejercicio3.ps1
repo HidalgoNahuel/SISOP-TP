@@ -41,7 +41,8 @@ Param(
     [ValidateRange("Positive")]
     [Int64] $umbral
 )
-$logFileName#TODO
+$LOG = New-Item -ItemType File -Path $pathSalida -Name ('Resultado' + '_[', (Get-Date -Format "yyyyMMddHHmm") + '].out') -Force
+
 $LIST = Get-ChildItem -Path $pathEntrada -File -Recurse | Where-Object {$_.Length -gt $umbral*1024}
 $usedHash = New-Object System.Collections.ArrayList
 foreach($file in $LIST){
@@ -49,7 +50,11 @@ foreach($file in $LIST){
     $hash = (Get-FileHash $file -Algorithm MD5).Hash
      
     if( !$usedHash.Contains($hash) -and !((Get-Content $file) -match '[^\x20-\x7F]')){
-    Get-ChildItem $pathEntrada -File -Recurse | Get-FileHash -Algorithm MD5 | Where-Object {$_.Hash -match $hash} | ForEach-Object {$FILE = $_.Path.Split("\"); $PATH = $_.Path; Write-Host ($FILE[$FILE.Length-1]) ("`t`t") ($PATH)};
-    $usedHash.add($hash)
-}
+        Get-ChildItem $pathEntrada -File -Recurse | Get-FileHash -Algorithm MD5 | Where-Object {$_.Hash -match $hash} |
+        ForEach-Object{
+            $splittedPath = $_.Path.Split("/")
+            "{0,-30}`t{1,-30}" -f $splittedPath[$splittedPath.Length-1], $_.Path | Out-File -LiteralPath $LOG -Append
+        }
+        $Null = $usedHash.add($hash)
+    }
 }
