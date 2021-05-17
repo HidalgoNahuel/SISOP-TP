@@ -35,7 +35,7 @@ Param(
     [ValidateNotNullOrEmpty()]
     [ValidateScript({
         if( -Not($_ | Test-Path)){
-            throw "La carpeta no existe"
+            throw "La carpeta no existe"    #Especificacion y validaciones para el parametro pathEntrada
         }
         return $True
     })]
@@ -46,7 +46,7 @@ Param(
     [ValidateNotNullOrEmpty()]
     [ValidateScript({
         if( -Not($_ | Test-Path)){
-            throw "La carpeta no existe"
+            throw "La carpeta no existe"    #Especificacion y validaciones para el parametro pathSalida
         }
         return $True
     })]
@@ -55,29 +55,29 @@ Param(
 
     [Parameter(Mandatory=$True)]
     [ValidateNotNullOrEmpty()]
-    [ValidateRange("Positive")]
+    [ValidateRange("Positive")]             #Especificacion y validaciones para el parametro umbral
     [Int64] $umbral
 )
-$LOG = New-Item -ItemType File -Path $pathSalida -Name ('Resultado' + '_[', (Get-Date -Format "yyyyMMddHHmm") + '].out') -Force
+$LOG = New-Item -ItemType File -Path $pathSalida -Name ('Resultado' + '_[', (Get-Date -Format "yyyyMMddHHmm") + '].out') -Force #Generacion del archivo log.
 
-$usedHash = New-Object System.Collections.ArrayList
+$usedHash = New-Object System.Collections.ArrayList     #Array donde guardaremos todos los Hash que utilicemos para no comparar mas de una vez el mismo hash.
 
-Get-ChildItem -Path $pathEntrada -File -Recurse | Where-Object {$_.Length -gt $umbral*1024} | ForEach-Object{    
-    
-    $hash = (Get-FileHash $_ -Algorithm MD5).Hash
-
-    if( !$usedHash.Contains($hash) -and !((Get-Content $_) -match '[^\x20-\x7F]')){
-        Get-ChildItem $pathEntrada -File -Recurse | Get-FileHash -Algorithm MD5 | Where-Object {$_.Hash -match $hash} |
-        ForEach-Object{
-            if($_.Path.Contains("/")){
-                $splittedPath = $_.Path.Split("/")
-            }
-            else{ 
+Get-ChildItem -Path $pathEntrada -File -Recurse | Where-Object {$_.Length -gt $umbral*1024} | ForEach-Object{           #Obtenemos todos los archivos dentro del -pathEntrada
+                                                                                                                        #Validando que su tamaño sea mayor al -umbral en KB
+    $hash = (Get-FileHash $_ -Algorithm MD5).Hash                                                                       #Por cada Archivo obtenido verificamos que NO se haya comparado 
+                                                                                                                        #Y que en su interior NO tenga caracteres ASCII, validacion que utilzamos para
+    if( !$usedHash.Contains($hash) -and !((Get-Content $_) -match '[^\x20-\x7F]')){                                     #Verificar si el archivo es de texto plano.    
+        Get-ChildItem $pathEntrada -File -Recurse | Get-FileHash -Algorithm MD5 | Where-Object {$_.Hash -match $hash} | #Obtenemos todos los archivos dento de -pathEntrada cuyo MD5 Hash sea igual 
+        ForEach-Object{                                                                                                 #Al que usamos para comparar. 
+            if($_.Path.Contains("/")){                                                                                  #Por cada coincidencia, obtenemos el path del archivo, cortamos el string
+                $splittedPath = $_.Path.Split("/")                                                                      #Validando que, segun el SO el path cambia en:
+            }                                                                                                           #"/" si es ubuntu y "\" si es windows.
+            else{                                                                                                       
                 $splittedPath = $_.Path.Split("\")
             }
-            "{0,-40}`t{1,-40}" -f $splittedPath[$splittedPath.Length-1], $_.Path | Out-File -LiteralPath $LOG -Append
+            "{0,-40}`t{1,-40}" -f $splittedPath[$splittedPath.Length-1], $_.Path | Out-File -LiteralPath $LOG -Append   #Formateamos el string de salida con el nombre, path y escribimos en el archivo log.
         }
-        $Null = $usedHash.add($hash)
+        $Null = $usedHash.add($hash)                                                                                    #Añadimos el Hash utilizado para comparar a la lista de Hash usados.
         "" | Out-File -LiteralPath $LOG -Append
     }
 }
