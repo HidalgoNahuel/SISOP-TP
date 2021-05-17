@@ -1,10 +1,27 @@
+<#***********************
+Nombre del script:		ejercicio3.ps1
+Trabajo Practico Nro:	2
+Ejercicio Nro:		    3
+Entrega Nro:			1
+Integrantes
+	Apellidos		Nombre			Dni
+-------------------------------------------------------------------
+
+	Della Maddalena	Tomas			    39322141
+	Hidalgo			Nahuel Cristian		41427455
+	Feito			Gustavo			    27027190
+	Pfeiffer		Martin			    39166668
+	Zarzycki		Hernan Alejandro	39244031
+
+***********************#>
+
 <#
 .SYNOPSIS
 	Busca todos los archivos repetidos en un directorio dado.
 .DESCRIPTION
-	Este script busca en base a su CONTENIDO todos los archivos duplicados en un directorio dado (DirectorioEntrada).
-	Los archivos que se tendran en cuenta son todos aquellos cuyo tamaño sea mayor un umbral dado, en KB.
-	La salida de este sera un archivo de texto plano dentro de un directorio tipo log (DirectorioSalida).
+	Este script busca en base a su CONTENIDO todos los archivos duplicados en un directorio dado (pathEntrada).
+	Los archivos que se tendran en cuenta son todos aquellos cuyo tamaño sea mayor un tamaño dado (umbral), en KB.
+	La salida de este sera un archivo de texto plano dentro de un directorio tipo log (pathrioSalida).
 .PARAMETER pathEntrada
     Directorio Entrada existente donde se encuentran los archivos a analizar.
 .PARAMETER pathSalida
@@ -43,18 +60,24 @@ Param(
 )
 $LOG = New-Item -ItemType File -Path $pathSalida -Name ('Resultado' + '_[', (Get-Date -Format "yyyyMMddHHmm") + '].out') -Force
 
-$LIST = Get-ChildItem -Path $pathEntrada -File -Recurse | Where-Object {$_.Length -gt $umbral*1024}
 $usedHash = New-Object System.Collections.ArrayList
-foreach($file in $LIST){
+
+Get-ChildItem -Path $pathEntrada -File -Recurse | Where-Object {$_.Length -gt $umbral*1024} | ForEach-Object{    
     
-    $hash = (Get-FileHash $file -Algorithm MD5).Hash
-     
-    if( !$usedHash.Contains($hash) -and !((Get-Content $file) -match '[^\x20-\x7F]')){
+    $hash = (Get-FileHash $_ -Algorithm MD5).Hash
+
+    if( !$usedHash.Contains($hash) -and !((Get-Content $_) -match '[^\x20-\x7F]')){
         Get-ChildItem $pathEntrada -File -Recurse | Get-FileHash -Algorithm MD5 | Where-Object {$_.Hash -match $hash} |
         ForEach-Object{
-            $splittedPath = $_.Path.Split("/")
-            "{0,-30}`t{1,-30}" -f $splittedPath[$splittedPath.Length-1], $_.Path | Out-File -LiteralPath $LOG -Append
+            if($_.Path.Contains("/")){
+                $splittedPath = $_.Path.Split("/")
+            }
+            else{ 
+                $splittedPath = $_.Path.Split("\")
+            }
+            "{0,-40}`t{1,-40}" -f $splittedPath[$splittedPath.Length-1], $_.Path | Out-File -LiteralPath $LOG -Append
         }
         $Null = $usedHash.add($hash)
+        "" | Out-File -LiteralPath $LOG -Append
     }
 }
