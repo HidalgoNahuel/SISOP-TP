@@ -7,7 +7,7 @@ Integrantes
 	Apellidos		Nombre			Dni
 -------------------------------------------------------------------
 
-	Della Maddalena		Tomas			39322141
+	Della Maddalena	Tomas				39322141
 	Hidalgo			Nahuel Cristian		41427455
 	Feito			Gustavo			    27027190
 	Pfeiffer		Martin			    39166668
