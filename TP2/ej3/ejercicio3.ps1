@@ -53,16 +53,16 @@ Param(
     [string] 
     $DirectorioSalida,
 
-    [Parameter(Mandatory=$True)]
+    [Parameter(Mandatory=$False)]
     [ValidateNotNullOrEmpty()]
     [ValidateRange("NonNegative")]             #Especificacion y validaciones para el parametro umbral
-    [Int64] $Umbral
+    [Int64] $Umbral=0
 )
 $LOG = New-Item -ItemType File -Path $DirectorioSalida -Name ('Resultado_' + (Get-Date -Format "yyyyMMddHHmm") + '.out') -Force #Generacion del archivo log.
 
 $usedHash = New-Object System.Collections.ArrayList     #Array donde guardaremos todos los Hash que utilicemos para no comparar mas de una vez el mismo hash.
 
-Get-ChildItem -Path $Directorio -File -Recurse | Where-Object {$_.Length -gt $umbral*1024} | ForEach-Object{           #Obtenemos todos los archivos dentro del -pathEntrada
+Get-ChildItem -Path $Directorio -File -Recurse | Where-Object {$_.Length -gt $umbral*1024} | ForEach-Object{            #Obtenemos todos los archivos dentro del -pathEntrada
                                                                                                                         #Validando que su tamaño sea mayor al -umbral en KB
     $hash = (Get-FileHash $_ -Algorithm MD5).Hash                                                                       #Por cada Archivo obtenido verificamos que NO se haya comparado 
                                                                                                                         #Y que en su interior NO tenga caracteres ASCII, validacion que utilzamos para
