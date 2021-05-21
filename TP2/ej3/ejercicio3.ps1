@@ -40,7 +40,7 @@ Param(
         return $True
     })]
     [string]
-    $pathEntrada,
+    $Directorio,
     
     [Parameter(Mandatory=$True)]
     [ValidateNotNullOrEmpty()]
@@ -51,23 +51,23 @@ Param(
         return $True
     })]
     [string] 
-    $pathSalida,
+    $DirectorioSalida,
 
     [Parameter(Mandatory=$True)]
     [ValidateNotNullOrEmpty()]
-    [ValidateRange("Positive")]             #Especificacion y validaciones para el parametro umbral
-    [Int64] $umbral
+    [ValidateRange("NonNegative")]             #Especificacion y validaciones para el parametro umbral
+    [Int64] $Umbral
 )
-$LOG = New-Item -ItemType File -Path $pathSalida -Name ('Resultado' + '_[', (Get-Date -Format "yyyyMMddHHmm") + '].out') -Force #Generacion del archivo log.
+$LOG = New-Item -ItemType File -Path $DirectorioSalida -Name ('Resultado_' + (Get-Date -Format "yyyyMMddHHmm") + '.out') -Force #Generacion del archivo log.
 
 $usedHash = New-Object System.Collections.ArrayList     #Array donde guardaremos todos los Hash que utilicemos para no comparar mas de una vez el mismo hash.
 
-Get-ChildItem -Path $pathEntrada -File -Recurse | Where-Object {$_.Length -gt $umbral*1024} | ForEach-Object{           #Obtenemos todos los archivos dentro del -pathEntrada
+Get-ChildItem -Path $Directorio -File -Recurse | Where-Object {$_.Length -gt $umbral*1024} | ForEach-Object{           #Obtenemos todos los archivos dentro del -pathEntrada
                                                                                                                         #Validando que su tamaño sea mayor al -umbral en KB
     $hash = (Get-FileHash $_ -Algorithm MD5).Hash                                                                       #Por cada Archivo obtenido verificamos que NO se haya comparado 
                                                                                                                         #Y que en su interior NO tenga caracteres ASCII, validacion que utilzamos para
     if( !$usedHash.Contains($hash) -and !((Get-Content $_) -match '[^\x20-\x7F]')){                                     #Verificar si el archivo es de texto plano.    
-        Get-ChildItem $pathEntrada -File -Recurse | Get-FileHash -Algorithm MD5 | Where-Object {$_.Hash -match $hash} | #Obtenemos todos los archivos dento de -pathEntrada cuyo MD5 Hash sea igual 
+        Get-ChildItem $Directorio -File -Recurse | Get-FileHash -Algorithm MD5 | Where-Object {$_.Hash -match $hash} | #Obtenemos todos los archivos dento de -pathEntrada cuyo MD5 Hash sea igual 
         ForEach-Object{                                                                                                 #Al que usamos para comparar. 
             if($_.Path.Contains("/")){                                                                                  #Por cada coincidencia, obtenemos el path del archivo, cortamos el string
                 $splittedPath = $_.Path.Split("/")                                                                      #Validando que, segun el SO el path cambia en:
