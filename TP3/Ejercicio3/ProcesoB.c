@@ -5,72 +5,75 @@
 #include <fcntl.h>
 #include <unistd.h>
 
-void facturacion_anual(int, int);
-void facturacion_mensual(int, int);
-void facturacion_media(int, int);
-int pedir_anio();
+#define err(msg){ fprintf(stderr, "%s", msg); exit(1);}
+
+int pedir_anio(), pedir_mes();
 
 int main(int argc, char*argv[]){
 
-	char*fifo_datos = "./fifoDatos";
+	if(argc < 2){
+		puts("Argumentos insuficientes");
+		return 0;
+	}
+	char * fifo_path = argv[1]; 
 
-	int fd = open(fifo_datos, O_WRONLY); 
-	int opc = 0;	
-
+	int fd,opc;
+	char resultado[10];
 	printf("\tMenu:\n1- Facturacion Mensual.\n2- Facturacion Anual.\n3- Facturacion Media Anual.\n4- Salir.\n");		
 	do{
+		int opc;	
 		scanf("%d", &opc);
-		switch(opc){
-			case 1:
-			facturacion_mensual(pedir_anio(), fd);
-			break;
-	
-			case 2:
-			facturacion_anual(pedir_anio(), fd);
-			break;
-
-			case 3:
-			facturacion_media(pedir_anio(), fd);
-			break;
-
-			case 4:
-			break;
-
-			default:
-			printf("Opcion Invalida. Ingrese Nuevamente..\n");
-			break;
+		if(opc > 0 && opc < 4){
+			int anio = pedir_anio();
+			int mes = 0;
+			if(opc == 1){
+				mes = pedir_mes();
+			}
+		
+			char instruccion[15];
+			sprintf(instruccion, "%d-%d/-%d", opc, anio, mes);
+		
+			fd = open(fifo_path, O_WRONLY);
+			write(fd, instruccion, strlen(instruccion)+1);
+			close(fd);
+			
+			break;	
 		}
-	}while(opc != 1 && opc != 2 && opc != 3 && opc != 4);
+		else
+			printf("Opcion Invalida. Ingrese Nuevamente..\n");
+	}while(opc != 4);
 
+	fd = open(fifo_path, O_RDONLY);
+	read(fd, resultado, sizeof(resultado));
 	close(fd);
+	
+	printf("Resultado total: %s\n", resultado);
+
     return 0;
 }
+
 int pedir_anio(){
 	int anio;
 	printf("Ingrese año de facturacion: ");
-		do{
-			scanf("%d", &anio);
-			if( anio < 0 || anio > 2021)
-				printf("Año invalido. Ingrese nuevamente..\n");
-			else	
-				break;
-		}while(1);
+	do{
+		scanf("%d", &anio);
+		if( anio < 0 || anio > 2021)
+			printf("Año invalido. Ingrese nuevamente..\n");
+		else	
+			break;
+	}while(1);
 	return anio;
 }
-void facturacion_anual(int anio, int fd){
+int pedir_mes(){
 
-	char opc = 2 + '0', instruccion[15], res[20];
-
-	sprintf(instruccion, "%c-%d", opc, anio);
-	write(fd, instruccion, strlen(instruccion)+1);
-	
-	read(fd, res, sizeof(res));
-
-	printf("Facturacion Anual correspondiente al año %s es: %s\n", instruccion, res);
-}
-void facturacion_mensual(int anio, int fd){
-	printf("Mensual");
-}
-void facturacion_media(int anio, int fd){
-	printf("Media-Anual");
+	int mes;
+	printf("Ingrese mes de facturacion: ");
+	do{
+		scanf("%d", &mes);
+		if(mes < 0 || mes > 12)
+			printf("Mes invaldo. Ingrese nuevamente.. \n");
+		else
+			break;
+	}while(1);
+	return mes;
 }
