@@ -1,7 +1,6 @@
 #!/bin/bash
 
-pipe=./fifo_datos
-pipe2=./fifo_res
+pipe=./fifo
 
 if [[ ! -d $1 ]]; then 
 	echo "No existe la carpeta"
@@ -12,10 +11,5 @@ if [[ ! -p $pipe ]]; then
 	mkfifo $pipe
 fi
 
-if [[ ! -p $pipe2 ]]; then
-	mkfifo $pipe2
-fi
-
-./ProcesoA $1 &
-./ProcesoB 
-
+bin/ProcesoA.out $pipe $1 &
+bin/ProcesoB.out $pipe

@@ -5,57 +5,64 @@
 #include <fcntl.h>
 #include <unistd.h>
 
-#define err(msg){ fprintf(stderr, "%s", msg); exit(1);}
+#define err(msg){ fprintf(stderr, "%s\n", msg); exit(1);}
 
 int pedir_anio(), pedir_mes();
+void main(int argc, char*argv[]){
 
-int main(int argc, char*argv[]){
+	const char*meses[] = { "enero", "febrero", "marzo", 
+				 "abril", "mayo", "junio", 
+				 "julio", "agosto", "septiembre", 
+				 "octubre", "noviembre", "diciembre" };
 
 	if(argc < 2){
-		puts("Argumentos insuficientes");
-		return 0;
-	}
-	char * fifo_path = argv[1]; 
+		err("Argumentos insuficientes");
+		return ;
+	} 
 
-	int fd,opc;
-	char resultado[10];
 	printf("\tMenu:\n1- Facturacion Mensual.\n2- Facturacion Anual.\n3- Facturacion Media Anual.\n4- Salir.\n");		
-	do{
-		int opc;	
-		scanf("%d", &opc);
-		if(opc > 0 && opc < 4){
-			int anio = pedir_anio();
-			int mes = 0;
-			if(opc == 1){
-				mes = pedir_mes();
-			}
-		
-			char instruccion[15];
-			sprintf(instruccion, "%d-%d/-%d", opc, anio, mes);
-		
-			fd = open(fifo_path, O_WRONLY);
-			write(fd, instruccion, strlen(instruccion)+1);
-			close(fd);
-			
-			break;	
-		}
-		else
-			printf("Opcion Invalida. Ingrese Nuevamente..\n");
-	}while(opc != 4);
-
-	fd = open(fifo_path, O_RDONLY);
-	read(fd, resultado, sizeof(resultado));
-	close(fd);
 	
-	printf("Resultado total: %s\n", resultado);
+	int opc, anio;
+	char*mes = (char*)malloc(sizeof(char)*strlen("septiembre"));
+	char* instruccion = (char*)malloc(sizeof(char)*50);
+	
+	do{	
+		scanf("%d", &opc);
+		
+		if(opc > 0 && opc < 4){		
+			sprintf(instruccion, "%d-%d/-%s.txt", opc, (anio = pedir_anio()), opc==1? mes = meses[pedir_mes()-1]:"");
+			break;
+		}
 
-    return 0;
+		if(opc == 4){	
+			sprintf(instruccion, "%d-", opc);
+			return;
+		}
+		printf("Opcion Invalida. Ingrese Nuevamente..\n");
+
+	}while(1);
+
+	int fd = open(argv[1], O_WRONLY);
+	write(fd, instruccion, strlen(instruccion));
+	close(fd);
+		
+	float res;
+	fd = open(argv[1], O_RDONLY);
+	read(fd, &res, sizeof(res));
+	close(fd);
+
+	printf(res == -1.00 ?"No existe facturacion correspondiente": "Facturacion correspondiente");
+	printf(strlen(mes) != 0? " a %s del %d: ": " al %s%d:", mes,anio);
+	printf(res != -1.00?" %.2f\n":"\n", res);
+
+	
+    return;
 }
 
 int pedir_anio(){
 	int anio;
-	printf("Ingrese año de facturacion: ");
 	do{
+		printf("Ingrese año de facturacion: ");
 		scanf("%d", &anio);
 		if( anio < 0 || anio > 2021)
 			printf("Año invalido. Ingrese nuevamente..\n");
@@ -65,12 +72,11 @@ int pedir_anio(){
 	return anio;
 }
 int pedir_mes(){
-
 	int mes;
-	printf("Ingrese mes de facturacion: ");
 	do{
+		printf("Ingrese mes de facturacion (Formato: MM): ");
 		scanf("%d", &mes);
-		if(mes < 0 || mes > 12)
+		if(mes < 1 || mes > 12)
 			printf("Mes invaldo. Ingrese nuevamente.. \n");
 		else
 			break;

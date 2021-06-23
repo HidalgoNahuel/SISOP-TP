@@ -6,67 +6,56 @@
 #include <sys/ioctl.h>
 #include <dirent.h>
 
-#define err(msg){ fprintf(stderr, "%s", msg); exit(1);}
+#define err(msg){ fprintf(stderr, "%s\n", msg); exit(1);}
 
 float facturacion(const char*, const char*);
-
 float facturacion_mensual(const char*);
 float facturacion_anual_o_media(const char*, int);
 
-int main(int argc, char*argv[]){
+void main(int argc, char*argv[]){
 	
 	if(argc < 3)
 		err("argumentos insuficientes");
 	
-	float res = facturacion(argv[1], argv[2]);
+	char *instruccion = (char*)malloc(sizeof(char)*50);
 
-	printf("%.2f\n", res);
-
-	char resultado[20]; 
-	sprintf(resultado, "%.2f", res);
-
-	int fd = open(argv[1], O_WRONLY);
-	write(fd, resultado, strlen(resultado)+1);
-	close(fd);
-
-	return 0;
-}
-
-float facturacion(const char* fifo, const char* dir){
-
-	char instruccion[15];
-
-	int fd = open(fifo, O_RDONLY);
-	read(fd, instruccion, sizeof(instruccion));
+	int fd = open(argv[1], O_RDONLY);
+	read(fd, instruccion, sizeof(instruccion)*50);
 	close(fd);
 
 	const char opc = strtok(instruccion, "-")[0];
-	const char*anio = strtok(NULL, "-");
-	const char*mes = strtok(NULL, "-");	
 	
-	char folder_path[strlen(dir)+strlen(anio)];
-	strcpy(folder_path, dir);
+	if(opc - '0' == 4)
+		return;
+	
+	const char* anio = strtok(NULL, "-");
+	const char* mes = strtok(NULL, "-");
+
+	char*folder_path = (char*)malloc(sizeof(char)*(strlen(argv[2]) + strlen(anio) + strlen(mes)));
+
+	folder_path = argv[2];
 	strcat(folder_path, anio);
 
-	switch(opc - '0'){
-		case 1:
-			return facturacion_mensual(strcat(folder_path, mes));
-		case 2:
-			return facturacion_anual_o_media(folder_path, 2);
-		case 3:
-			return facturacion_anual_o_media(folder_path, 3);
-	}
+	float res;
+	if(opc - '0' == 1)
+		res = facturacion_mensual(strcat(folder_path, mes));
+	else
+		res = facturacion_anual_o_media(folder_path, opc - '0');
 
+	fd = open(argv[1], O_WRONLY);
+	write(fd, &res, sizeof(res));
+	close(fd);
+	return;
 }
 
 float facturacion_mensual(const char* path_name){
-	puts("fact mens");
-
+	
 	float total = 0, value;
 	FILE*arch = fopen(path_name, "rt");
 
-	if(!arch)
+	if(!arch){
 		return 0;
+	}
 	
 	while(fscanf(arch, "%f\n", &value) != EOF){
 		total += value;
@@ -85,23 +74,28 @@ float facturacion_anual_o_media(const char* folder_path, int opc){
 
 	if(d){
 		while((folder = readdir(d)) != NULL){
-			count++;
-			char path_name[strlen(folder_path) + 10];
-			strcpy(path_name, folder_path);
-			strcat(path_name, folder->d_name);
+			if( folder->d_type == DT_REG ){
+				
+				count++;
+				char path_name[strlen(folder_path) + 10];
+				strcpy(path_name, folder_path);
+				strcat(path_name, folder->d_name);
 			
-			FILE*arch = fopen(path_name, "rt");
+				FILE*arch = fopen(path_name, "rt");
 			
-			if(!arch)
-				return 0;
+				if(!arch)
+					return -1.00;
 			
-			float value;
-			while(fscanf(arch, "%f\n", &value) != EOF){
-				total += value;
+				float value;
+				while(fscanf(arch, "%f\n", &value) != EOF){
+					total += value;
+				}
+				fclose(arch);
 			}
-			fclose(arch);
 		}	
 		closedir(d);	
 	}
+	else
+		return 0;
 	return opc == 2? total:total/count;
 }
