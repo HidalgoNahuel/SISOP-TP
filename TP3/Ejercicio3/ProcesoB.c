@@ -5,20 +5,23 @@
 #include <fcntl.h>
 #include <unistd.h>
 
-#define err(msg){ fprintf(stderr, "%s\n", msg); exit(1);}
+#define err(msg, arg){ fprintf(stderr, "%s, vea %s -h\n", msg, arg); exit(1);}
+#define help(arg){ fprintf(stderr, "Ejemplo de ejecucion:\n ./path-del-ejecutable path-del-fifo\nEjemplo: %s pipe/fifo\n", arg); exit(1);}
 
 int pedir_anio(), pedir_mes();
 void main(int argc, char*argv[]){
 
-	const char*meses[] = { "enero", "febrero", "marzo", 
+	if(argc > 1 && strcmp(argv[1], "-h") == 0){
+		help(argv[0]);
+	}
+
+	if(argc < 2)
+		err("Argumentos insuficientes", argv[0]);
+
+	char*meses[] = { "enero", "febrero", "marzo", 
 				 "abril", "mayo", "junio", 
 				 "julio", "agosto", "septiembre", 
 				 "octubre", "noviembre", "diciembre" };
-
-	if(argc < 2){
-		err("Argumentos insuficientes");
-		return ;
-	} 
 
 	printf("\tMenu:\n1- Facturacion Mensual.\n2- Facturacion Anual.\n3- Facturacion Media Anual.\n4- Salir.\n");		
 	

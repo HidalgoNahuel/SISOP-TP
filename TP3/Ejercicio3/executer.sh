@@ -18,7 +18,7 @@ Donde:
 
 EXAMPLE:
 
-	./executer.sh -f fifo/ -i facturacion/
+	./executer.sh -f fifo -i facturacion/
 
 	./executer.sh -h
 
@@ -29,16 +29,15 @@ function indicarAyuda(){
 	exit 1
 }
 
-while getopts ":hf:i:" o; do	
+while getopts ":hp:d:" o; do	
 	case "${o}" in	
-		d)
-			f="${OPTARG}"
-			[ ! -e "$d" ] && echo "$0: FIFO inexistente" && indicarAyuda $0
+		p)
+			p="${OPTARG}"
+			[ ! -e "$p" ] && echo "$0: Fifo/Pipe inexistente" && indicarAyuda $0
 			;;
-		l)
-			i="${OPTARG}"
-			[ ! -d "$l" ] && echo "$0: DirectorioFacturacion inexistente" && indicarAyuda $0
-			[ ${l: -1} != "/" ] && l="${l}"/""				#Correccion en caso de que directorioSalida no finalice con "/"
+		d)
+			d="${OPTARG}"
+			[ ! -d "$d" ] && echo "$0: Directorio Facturacion inexistente" && indicarAyuda $0
 			;;
 
 		h)
@@ -54,9 +53,9 @@ while getopts ":hf:i:" o; do
 	esac
 done
 
-[ $# -lt 5 ] && echo "$0: Cantidad de parametros menor a la esperada" && indicarAyuda $0
-[ ! -n "$f" ] && echo "$0: Directorio Entrada erroneo o faltante" && indicarAyuda $0
-[ ! -n "$i" ] && echo "$0: Directorio Log erroneo o faltante" && indicarAyuda $0
+[ $# -lt 4 ] && echo "$0: Cantidad de parametros menor a la esperada" && indicarAyuda $0
+[ ! -n "$d" ] && echo "$0: Directorio Facturacion erroneo" && indicarAyuda $0
+[ ! -n "$p" ] && echo "$0: PIPE erroneo" && indicarAyuda $0
 
-bin/ProcesoA.out $pipe $1 &
-bin/ProcesoB.out $pipe
+bin/ProcesoA.out $p $d &
+bin/ProcesoB.out $p

@@ -6,16 +6,21 @@
 #include <sys/ioctl.h>
 #include <dirent.h>
 
-#define err(msg){ fprintf(stderr, "%s\n", msg); exit(1);}
+#define err(msg, arg){ fprintf(stderr, "%s, vea %s -h\n", msg, arg); exit(1);}
 
+#define help(arg) { fprintf(stdout, "Ejemplo de ejecucion:\n ./path-del-ejecutable path-del-fifo carpeta-de-facturacion/\nEjemplo: %s pipe/fifo facturacion/\n", arg); exit(1);}
 float facturacion(const char*, const char*);
 float facturacion_mensual(const char*);
 float facturacion_anual_o_media(const char*, int);
 
 void main(int argc, char*argv[]){
-	
+
+	if(argc > 1 && strcmp(argv[1], "-h") == 0){
+		help(argv[0]);
+	}
+
 	if(argc < 3)
-		err("argumentos insuficientes");
+		err("Argumentos insuficientes", argv[0]);
 	
 	char *instruccion = (char*)malloc(sizeof(char)*50);
 
